@@ -248,13 +248,27 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 						switch ( test[cmd].type ) {
 							case 'checkbox':
 								r = test[cmd].checked;
+								break;
 							default:
 								r = test[cmd].value
+								break;
 						}
+						test[cmd].setCustomValidity(report);
 					}
-					else
+					else if ( test[cmd] instanceof RadioNodeList ) {
+						r = false;
+						for ( var i = 0; i < test[cmd].length; i ++ ) {
+							r |= test[cmd][i].checked;
+							test[cmd][i].setCustomValidity(report);
+						}
+						if ( !r )
+							throw "Radio not set: " + cmd;
 						r = test[cmd].value;
-					test[cmd].setCustomValidity(report);
+					}
+					else {
+						r = test[cmd].value;
+						test[cmd].setCustomValidity(report);
+					}
 					return r;
 				}
 				else
@@ -267,12 +281,11 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 function validate(rule_string, test, is_form=false, report=true) {
 	var valid = true;
 	var command = validate_parse(rule_string);
-	while ( command.length ) {
+	while ( command.length && valid ) {
 		var command_stack = command.slice(0);
-		var v = validate_eval(command, test, is_form);
-		if ( !v && is_form && report )
+		valid &= validate_eval(command, test, is_form);
+		if ( !valid && is_form && report )
 			validate_eval(command_stack, test, is_form, "MUST");
-		valid &= v;
 	}
 	return valid;
 }
