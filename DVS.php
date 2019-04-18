@@ -57,24 +57,24 @@ function validate_parse(&$rule_string, $stack_level = 0) : array {
 
 
 
-function validate_eval(array $test, array &$command) {
+function validate_eval(array &$command, array $test) {
 	$cmd = array_pop($command);
 	switch ( $cmd ) {
 		case "OR":
-			$x = validate_eval($test, $command);
-			$y = validate_eval($test, $command);
+			$x = validate_eval($command, $test);
+			$y = validate_eval($command, $test);
 			return $x or $y;
 		case "AND":
-			$x = validate_eval($test, $command);
-			$y = validate_eval($test, $command);
+			$x = validate_eval($command, $test);
+			$y = validate_eval($command, $test);
 			return $x and $y;
 		case "NOT":
-			return !validate_eval($test, $command);
+			return !validate_eval($command, $test);
 		case "SET":
 			$arg = array_pop($command);
-			$arg = validate(parse($arg));
+			$arg = validate_parse($arg);
 			try {
-				validate_eval($test, $arg);
+				validate_eval($arg, $test);
 				return true;
 			}
 			catch ( Exception $e ) {
@@ -82,9 +82,9 @@ function validate_eval(array $test, array &$command) {
 			}
 		case "EMPTY":
 			$arg = array_pop($command);
-			$arg = validate(parse($arg));
+			$arg = validate_parse($arg);
 			try {
-				$val = validate_eval($test, $arg);
+				$val = validate_eval($arg, $test);
 				return empty($val);
 			}
 			catch ( Exception $e ) {
@@ -99,7 +99,7 @@ function validate_eval(array $test, array &$command) {
 			$valid = false;
 			while ( $fields ) {
 				$fields = array_merge($fields, $cmd_any);
-				$valid |= validate_eval($test, $fields);
+				$valid |= validate_eval($fields, $test);
 			}
 			return $valid;
 		case "ALL":
@@ -110,60 +110,60 @@ function validate_eval(array $test, array &$command) {
 			$valid = true;
 			while ( $fields ) {
 				$fields = array_merge($fields, $cmd_all);
-				$valid &= validate_eval($test, $fields);
+				$valid &= validate_eval($fields, $test);
 			}
 			return $valid;
 		case "BETWEEN":
-			$x = validate_eval($test, $command);
-			$y = validate_eval($test, $command);
-			$z = validate_eval($test, $command);
+			$x = validate_eval($command, $test);
+			$y = validate_eval($command, $test);
+			$z = validate_eval($command, $test);
 			return $x <= $z and $z <= $y;
 		case ">":
-			$x = validate_eval($test, $command);
-			$y = validate_eval($test, $command);
+			$x = validate_eval($command, $test);
+			$y = validate_eval($command, $test);
 			return $x > $y;
 		case "<":
-			$x = validate_eval($test, $command);
-			$y = validate_eval($test, $command);
+			$x = validate_eval($command, $test);
+			$y = validate_eval($command, $test);
 			return $x < $y;
 		case "==":
-			$x = validate_eval($test, $command);
-			$y = validate_eval($test, $command);
+			$x = validate_eval($command, $test);
+			$y = validate_eval($command, $test);
 			return $x == $y;
 		case ">=":
-			$x = validate_eval($test, $command);
-			$y = validate_eval($test, $command);
+			$x = validate_eval($command, $test);
+			$y = validate_eval($command, $test);
 			return $x >= $y;
 		case "<=":
-			$x = validate_eval($test, $command);
-			$y = validate_eval($test, $command);
+			$x = validate_eval($command, $test);
+			$y = validate_eval($command, $test);
 			return $x <= $y;
 		case "SUM":
 			$fields = array_pop($command);
 			$fields = validate_parse($fields, -1);
 			$value = 0;
 			while ( $fields )
-				$valid += validate_eval($test, $fields);
+				$valid += validate_eval($fields, $test);
 			return $valid;
 		case "+":
-			$x = validate_eval($test, $command);
-			$y = validate_eval($test, $command);
+			$x = validate_eval($command, $test);
+			$y = validate_eval($command, $test);
 			return $x + $y;
 		case "-":
-			$x = validate_eval($test, $command);
-			$y = validate_eval($test, $command);
+			$x = validate_eval($command, $test);
+			$y = validate_eval($command, $test);
 			return $x - $y;
 		case "*":
-			$x = validate_eval($test, $command);
-			$y = validate_eval($test, $command);
+			$x = validate_eval($command, $test);
+			$y = validate_eval($command, $test);
 			return $x * $y;
 		case "/":
-			$x = validate_eval($test, $command);
-			$y = validate_eval($test, $command);
+			$x = validate_eval($command, $test);
+			$y = validate_eval($command, $test);
 			return $x / $y;
 		case "**":
-			$x = validate_eval($test, $command);
-			$y = validate_eval($test, $command);
+			$x = validate_eval($command, $test);
+			$y = validate_eval($command, $test);
 			return $x ** $y;
 		default:
 			if ( is_numeric($cmd) )
@@ -172,7 +172,7 @@ function validate_eval(array $test, array &$command) {
 				return substr($cmd, 1, strlen($cmd)-2);
 			if ( $cmd[0] == "(" and $cmd[strlen($cmd)-1] == ")" ) {
 				$cmd = validate_parse($cmd, -1);
-				return validate_eval($test, $cmd);
+				return validate_eval($cmd, $test);
 			}
 			if ( isset($test[$cmd]) )
 				return $test[$cmd];
@@ -182,10 +182,10 @@ function validate_eval(array $test, array &$command) {
 
 
 
-function validate(array $test, string $rule_string) {
+function validate(string $rule_string, array $test) {
 	$valid = true;
 	$command = validate_parse($rule_string);
 	while ( $command )
-		$valid &= validate_eval($test, $command);
+		$valid &= validate_eval($command, $test);
 	return $valid;
 } ?>
