@@ -290,7 +290,7 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 	}
 }
 
-function validate(rule_string, test, is_form=false, report=true) {
+function validate(rule_string, test, is_form=true, report=true) {
 	var valid = true;
 	var command = validate_parse(rule_string);
 	while ( command.length && valid ) {
