@@ -74,11 +74,9 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 				validate_eval(command_stack, test, is_form, report + " NOT", !invert);
 			return r;
 		case "SET":
-			var arg = command.pop();
-			arg = validate_parse(arg);
 			var r;
 			try {
-				validate_eval(arg, test, is_form);
+				validate_eval(command, test, is_form);
 				r = true;
 			}
 			catch(err) {
@@ -95,11 +93,9 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 			}
 			return r;
 		case "EMPTY":
-			var arg = command.pop();
-			arg = validate_parse(arg);
 			var r;
 			try {
-				var val = validate_eval(arg, test, is_form);
+				var val = validate_eval(command, test, is_form);
 				r = val == undefined || val == null || val == false || val == [] || val == 0 || val == "" || val == "0";
 			}
 			catch ( err ) {

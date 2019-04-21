@@ -71,20 +71,16 @@ function validate_eval(array &$command, array $test) {
 		case "NOT":
 			return !validate_eval($command, $test);
 		case "SET":
-			$arg = array_pop($command);
-			$arg = validate_parse($arg);
 			try {
-				validate_eval($arg, $test);
+				validate_eval($command, $test);
 				return true;
 			}
 			catch ( Exception $e ) {
 				return false;
 			}
 		case "EMPTY":
-			$arg = array_pop($command);
-			$arg = validate_parse($arg);
 			try {
-				$val = validate_eval($arg, $test);
+				$val = validate_eval($command, $test);
 				return empty($val);
 			}
 			catch ( Exception $e ) {
