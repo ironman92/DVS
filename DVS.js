@@ -138,6 +138,17 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 				valid &= validate_eval(fields, test, is_form, report, invert);
 			}
 			return valid;
+		case "MATCH":
+			var x = command.pop();
+			x = validate_parse(x, -1)[0];
+			x = new RegExp(x);
+			var y = validate_eval(command, test, is_form);
+			var valid = x.test(y);
+			if ( invert != !valid && is_form && report ) {
+				var x = command_stack.pop();
+				validate_eval(command_stack, test, is_form, report + " MATCH PATTERN: " + x, invert);
+			}
+			return valid;
 		case "BETWEEN":
 			var x = validate_eval(command, test, is_form);
 			var y = validate_eval(command, test, is_form);

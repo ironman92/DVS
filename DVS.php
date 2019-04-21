@@ -113,6 +113,11 @@ function validate_eval(array &$command, array $test) {
 				$valid &= validate_eval($fields, $test);
 			}
 			return $valid;
+		case "MATCH":
+			$x = validate_eval($command, $test);
+			$y = validate_eval($command, $test);
+			$valid = preg_match("/$x/", $y);
+			return $valid;
 		case "BETWEEN":
 			$x = validate_eval($command, $test);
 			$y = validate_eval($command, $test);
