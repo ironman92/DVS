@@ -222,6 +222,11 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 			var y = validate_eval(command, test, is_form, report?"QUOTENT "+report:"", invert);
 			var r = x / y;
 			return r;
+		case "%":
+			var x = validate_eval(command, test, is_form, report?"QUOTENT "+report:"", invert);
+			var y = validate_eval(command, test, is_form, report?"QUOTENT "+report:"", invert);
+			var r = x % y;
+			return r;
 		case "**":
 			var x = validate_eval(command, test, is_form, report?"POWER "+report:"", invert);
 			var y = validate_eval(command, test, is_form, report?"POWER "+report:"", invert);

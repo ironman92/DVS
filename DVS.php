@@ -161,6 +161,10 @@ function validate_eval(array &$command, array $test) {
 			$x = validate_eval($command, $test);
 			$y = validate_eval($command, $test);
 			return $x / $y;
+		case "%":
+			$x = validate_eval($command, $test);
+			$y = validate_eval($command, $test);
+			return $x % $y;
 		case "**":
 			$x = validate_eval($command, $test);
 			$y = validate_eval($command, $test);
