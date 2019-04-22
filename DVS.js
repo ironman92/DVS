@@ -54,24 +54,24 @@ function validate_parse(rule_string, stack_level=0) {
 	return rules.reverse();
 }
 
-function validate_eval(command, test, is_form=false, report="", invert=false) {
+function validate_eval(command, test, is_form=false, report="", invert=false, custom_error="") {
 	var cmd = command.pop();
 	var command_stack = command.slice(0);
 	switch ( cmd ) {
 		case "OR":
-			var x = validate_eval(command, test, is_form, report, invert);
-			var y = validate_eval(command, test, is_form, report, invert);
+			var x = validate_eval(command, test, is_form, report, invert, custom_error);
+			var y = validate_eval(command, test, is_form, report, invert, custom_error);
 			var r = x || y;
 			return r;
 		case "AND":
-			var x = validate_eval(command, test, is_form, report, invert);
-			var y = validate_eval(command, test, is_form, report, invert);
+			var x = validate_eval(command, test, is_form, report, invert, custom_error);
+			var y = validate_eval(command, test, is_form, report, invert, custom_error);
 			var r = x && y;
 			return r;
 		case "NOT":
 			var r = !validate_eval(command, test, is_form);
 			if ( invert != !r && is_form && report )
-				validate_eval(command_stack, test, is_form, report + " NOT", !invert);
+				validate_eval(command_stack, test, is_form, report + " NOT", !invert, custom_error);
 			return r;
 		case "SET":
 			var r;
@@ -83,10 +83,8 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 				r = false;
 			}
 			if ( invert != !r && is_form && report ) {
-				arg = command_stack.pop();
-				arg = validate_parse(arg);
 				try {
-					validate_eval(arg, test, is_form, report + " BE SET", invert);
+					validate_eval(command_stack, test, is_form, report + " BE SET", invert, custom_error);
 				}
 				catch(err) {
 				}
@@ -102,16 +100,22 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 				r = true;
 			}
 			if ( invert != !r && is_form && report ) {
-				arg = command_stack.pop();
-				arg = validate_parse(arg);
 				var r;
 				try {
-					validate_eval(arg, test, is_form, report + " BE EMPTY", invert);
+					validate_eval(command_stack, test, is_form, report + " BE EMPTY", invert, custom_error);
 				}
 				catch ( err ) {
 				}
 			}
 			return r;
+		case "ERROR":
+			var error = validate_eval(command, test, is_form, report, invert, custom_error);
+			var valid = validate_eval(command, test, is_form, report, invert, custom_error);
+			if ( !valid ) {
+				validate_eval(command_stack, test, is_form, report, invert, custom_error);
+				validate_eval(command_stack, test, is_form, report, invert, error);
+			}
+			return valid;
 		case "ANY":
 			var cmd_any = command.pop();
 			cmd_any = validate_parse(cmd_any, -1);
@@ -120,7 +124,7 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 			var valid = false;
 			while ( fields.length ) {
 				fields = fields.concat(cmd_any);
-				valid |= validate_eval(fields, test, is_form, report, invert);
+				valid |= validate_eval(fields, test, is_form, report, invert, custom_error);
 			}
 			return valid;
 		case "ALL":
@@ -131,18 +135,17 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 			var valid = true;
 			while ( fields.length ) {
 				fields = fields.concat(cmd_all);
-				valid &= validate_eval(fields, test, is_form, report, invert);
+				valid &= validate_eval(fields, test, is_form, report, invert, custom_error);
 			}
 			return valid;
 		case "MATCH":
-			var x = command.pop();
-			x = validate_parse(x, -1)[0];
+			var x = validate_eval(command, test);
 			x = new RegExp(x);
 			var y = validate_eval(command, test, is_form);
 			var valid = x.test(y);
 			if ( invert != !valid && is_form && report ) {
-				var x = command_stack.pop();
-				validate_eval(command_stack, test, is_form, report + " MATCH PATTERN: " + x, invert);
+				validate_eval(command_stack, test, is_form, report + " MATCH PATTERN: " + x, invert, custom_error);
+				validate_eval(command_stack, test, is_form, report + " MATCH PATTERN: " + x, invert, custom_error);
 			}
 			return valid;
 		case "BETWEEN":
@@ -151,9 +154,9 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 			var z = validate_eval(command, test, is_form);
 			var r = x <= z && z <= y;
 			if ( invert != !r && is_form && report ) {
-				validate_eval(command_stack, test, is_form, z + " " + report + " BE BETWEEN " + x + " AND " + y, invert);
-				validate_eval(command_stack, test, is_form, z + " " + report + " BE BETWEEN " + x + " AND " + y, invert);
-				validate_eval(command_stack, test, is_form, z + " " + report + " BE BETWEEN " + x + " AND " + y, invert);
+				validate_eval(command_stack, test, is_form, z + " " + report + " BE BETWEEN " + x + " AND " + y, invert, custom_error);
+				validate_eval(command_stack, test, is_form, z + " " + report + " BE BETWEEN " + x + " AND " + y, invert, custom_error);
+				validate_eval(command_stack, test, is_form, z + " " + report + " BE BETWEEN " + x + " AND " + y, invert, custom_error);
 			}
 			return r;
 		case ">":
@@ -161,8 +164,8 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 			var y = validate_eval(command, test, is_form);
 			var r = x > y;
 			if ( invert != !r && is_form && report ) {
-				validate_eval(command_stack, test, is_form, x + " " + report + " BE GREATOR THAN " + y, invert);
-				validate_eval(command_stack, test, is_form, x + " " + report + " BE GREATOR THAN " + y, invert);
+				validate_eval(command_stack, test, is_form, x + " " + report + " BE GREATOR THAN " + y, invert, custom_error);
+				validate_eval(command_stack, test, is_form, x + " " + report + " BE GREATOR THAN " + y, invert, custom_error);
 			}
 			return r;
 		case "<":
@@ -170,8 +173,8 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 			var y = validate_eval(command, test, is_form);
 			var r = x < y;
 			if ( invert != !r && is_form && report ) {
-				validate_eval(command_stack, test, is_form, x + " " + report + " BE LESS THAN " + y, invert);
-				validate_eval(command_stack, test, is_form, x + " " + report + " BE LESS THAN " + y, invert);
+				validate_eval(command_stack, test, is_form, x + " " + report + " BE LESS THAN " + y, invert, custom_error);
+				validate_eval(command_stack, test, is_form, x + " " + report + " BE LESS THAN " + y, invert, custom_error);
 			}
 			return r;
 		case "==":
@@ -179,8 +182,8 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 			var y = validate_eval(command, test, is_form);
 			var r = x == y;
 			if ( invert != !r && is_form && report ) {
-				validate_eval(command_stack, test, is_form, x + " " + report + " BE EQUAL TO " + y, invert);
-				validate_eval(command_stack, test, is_form, x + " " + report + " BE EQUAL TO " + y, invert);
+				validate_eval(command_stack, test, is_form, x + " " + report + " BE EQUAL TO " + y, invert, custom_error);
+				validate_eval(command_stack, test, is_form, x + " " + report + " BE EQUAL TO " + y, invert, custom_error);
 			}
 			return r;
 		case ">=":
@@ -188,8 +191,8 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 			var y = validate_eval(command, test, is_form);
 			var r = x >= y;
 			if ( invert != !r && is_form && report ) {
-				validate_eval(command_stack, test, is_form, x + " " + report + " BE GREATOR THAN OR EQUAL TO " + y, invert);
-				validate_eval(command_stack, test, is_form, x + " " + report + " BE GREATOR THAN OR EQUAL TO " + y, invert);
+				validate_eval(command_stack, test, is_form, x + " " + report + " BE GREATOR THAN OR EQUAL TO " + y, invert, custom_error);
+				validate_eval(command_stack, test, is_form, x + " " + report + " BE GREATOR THAN OR EQUAL TO " + y, invert, custom_error);
 			}
 			return r;
 		case "<=":
@@ -197,8 +200,8 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 			var y = validate_eval(command, test, is_form);
 			var r = x <= y;
 			if ( invert != !r && is_form && report ) {
-				validate_eval(command_stack, test, is_form, x + " " + report + " BE LESS THAN OR EQUAL TO " + y, invert);
-				validate_eval(command_stack, test, is_form, x + " " + report + " BE LESS THAN OR EQUAL TO " + y, invert);
+				validate_eval(command_stack, test, is_form, x + " " + report + " BE LESS THAN OR EQUAL TO " + y, invert, custom_error);
+				validate_eval(command_stack, test, is_form, x + " " + report + " BE LESS THAN OR EQUAL TO " + y, invert, custom_error);
 			}
 			return r;
 		case "SUM":
@@ -206,37 +209,37 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 			fields = validate_parse(fields, -1);
 			var value = 0;
 			while ( fields )
-				valid += validate_eval(fields, test, is_form, report?"TOTAL "+report:"", invert);
+				valid += validate_eval(fields, test, is_form, report?"TOTAL "+report:"", invert, custom_error);
 			var r = valid;
 			return r;
 		case "+":
-			var x = validate_eval(command, test, is_form, report?"TOTAL "+report:"", invert);
-			var y = validate_eval(command, test, is_form, report?"TOTAL "+report:"", invert);
+			var x = validate_eval(command, test, is_form, report?"TOTAL "+report:"", invert, custom_error);
+			var y = validate_eval(command, test, is_form, report?"TOTAL "+report:"", invert, custom_error);
 			var r = x + y;
 			return r;
 		case "-":
-			var x = validate_eval(command, test, is_form, report?"DIFFERENCE "+report:"", invert);
-			var y = validate_eval(command, test, is_form, report?"DIFFERENCE "+report:"", invert);
+			var x = validate_eval(command, test, is_form, report?"DIFFERENCE "+report:"", invert, custom_error);
+			var y = validate_eval(command, test, is_form, report?"DIFFERENCE "+report:"", invert, custom_error);
 			var r = x - y;
 			return r;
 		case "*":
-			var x = validate_eval(command, test, is_form, report?"PRODUCT "+report:"", invert);
-			var y = validate_eval(command, test, is_form, report?"PRODUCT "+report:"", invert);
+			var x = validate_eval(command, test, is_form, report?"PRODUCT "+report:"", invert, custom_error);
+			var y = validate_eval(command, test, is_form, report?"PRODUCT "+report:"", invert, custom_error);
 			var r = x * y;
 			return r;
 		case "/":
-			var x = validate_eval(command, test, is_form, report?"QUOTENT "+report:"", invert);
-			var y = validate_eval(command, test, is_form, report?"QUOTENT "+report:"", invert);
+			var x = validate_eval(command, test, is_form, report?"QUOTENT "+report:"", invert, custom_error);
+			var y = validate_eval(command, test, is_form, report?"QUOTENT "+report:"", invert, custom_error);
 			var r = x / y;
 			return r;
 		case "%":
-			var x = validate_eval(command, test, is_form, report?"QUOTENT "+report:"", invert);
-			var y = validate_eval(command, test, is_form, report?"QUOTENT "+report:"", invert);
+			var x = validate_eval(command, test, is_form, report?"QUOTENT "+report:"", invert, custom_error);
+			var y = validate_eval(command, test, is_form, report?"QUOTENT "+report:"", invert, custom_error);
 			var r = x % y;
 			return r;
 		case "**":
-			var x = validate_eval(command, test, is_form, report?"POWER "+report:"", invert);
-			var y = validate_eval(command, test, is_form, report?"POWER "+report:"", invert);
+			var x = validate_eval(command, test, is_form, report?"POWER "+report:"", invert, custom_error);
+			var y = validate_eval(command, test, is_form, report?"POWER "+report:"", invert, custom_error);
 			var r = Math.pow(x, y);
 			return r;
 		default:
@@ -250,7 +253,7 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 			}
 			if ( cmd[0] == "(" && cmd[cmd.length-1] == ")" ) {
 				cmd = validate_parse(cmd, -1);
-				var r = validate_eval(cmd, test, is_form, report, invert);
+				var r = validate_eval(cmd, test, is_form, report, invert, custom_error);
 				return r;
 			}
 			if ( cmd in test ) {
@@ -265,13 +268,19 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 								r = test[cmd].value
 								break;
 						}
-						test[cmd].setCustomValidity(report);
+						if ( custom_error )
+							test[cmd].setCustomValidity(custom_error);
+						else
+							test[cmd].setCustomValidity(report);
 					}
 					else if ( test[cmd] instanceof RadioNodeList ) {
 						r = false;
 						for ( var i = 0; i < test[cmd].length; i ++ ) {
 							r |= test[cmd][i].checked;
-							test[cmd][i].setCustomValidity(report);
+							if ( custom_error )
+								test[cmd][i].setCustomValidity(custom_error);
+							else
+								test[cmd][i].setCustomValidity(report);
 						}
 						if ( !r )
 							throw "Radio not set: " + cmd;
@@ -279,7 +288,10 @@ function validate_eval(command, test, is_form=false, report="", invert=false) {
 					}
 					else {
 						r = test[cmd].value;
-						test[cmd].setCustomValidity(report);
+						if ( custom_error )
+							test[cmd].setCustomValidity(custom_error);
+						else
+							test[cmd].setCustomValidity(report);
 					}
 					return r;
 				}

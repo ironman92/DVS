@@ -87,6 +87,10 @@ function validate_eval(array &$command, array $test) {
 				return true;
 			}
 			return empty($test[$arg]);
+		case "ERROR":
+			$error = validate_eval($command, $test);
+			$valid = validate_eval($command, $test);
+			return $valid;
 		case "ANY":
 			$cmd_any = array_pop($command);
 			$cmd_any = validate_parse($cmd_any, -1);
