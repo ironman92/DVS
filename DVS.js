@@ -260,18 +260,20 @@ function validate_eval(command, test, is_form=false, report="", invert=false, cu
 				if ( is_form ) {
 					var r;
 					if ( 'type' in test[cmd] ) {
+						if ( custom_error )
+							test[cmd].setCustomValidity(custom_error);
+						else
+							test[cmd].setCustomValidity(report);
 						switch ( test[cmd].type ) {
 							case 'checkbox':
 								r = test[cmd].checked;
+								if ( !r )
+									throw "Checkbox not set: " + cmd;
 								break;
 							default:
 								r = test[cmd].value
 								break;
 						}
-						if ( custom_error )
-							test[cmd].setCustomValidity(custom_error);
-						else
-							test[cmd].setCustomValidity(report);
 					}
 					else if ( test[cmd] instanceof RadioNodeList ) {
 						r = false;
