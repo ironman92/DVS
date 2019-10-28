@@ -33,7 +33,9 @@ function validate_parse(rule_string, stack_level=0) {
 				}
 				break;
 			case "\\":
-				rule_string = (rule_string.substring(0, i) + rule_string.substring(i+1)).trim();
+				if ( ["'", "(", ")"].includes(rule_string[i+1]) ) {
+					rule_string = (rule_string.substring(0, i) + rule_string.substring(i+1)).trim();
+				}
 				break;
 			case "'":
 				str_escape = !str_escape;

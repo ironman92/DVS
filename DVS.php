@@ -34,7 +34,8 @@ function validate_parse(&$rule_string, $stack_level = 0) : array {
 				}
 				break;
 			case "\\":
-				$rule_string = trim(substr($rule_string, 0, $i) . substr($rule_string, $i+1, strlen($rule_string)-$i));
+				if ( in_array($rule_string[$i+1], [ "'", "(", ")" ]) )
+					$rule_string = trim(substr($rule_string, 0, $i) . substr($rule_string, $i+1, strlen($rule_string)-$i));
 				break;
 			case "'":
 				$str_escape = !$str_escape;
