@@ -312,8 +312,10 @@ function validate(rule_string, test, is_form=true, report=true) {
 	while ( command.length && valid ) {
 		var command_stack = command.slice(0);
 		valid &= validate_eval(command, test, is_form);
-		if ( !valid && is_form && report )
+		if ( !valid && is_form && report ) {
 			validate_eval(command_stack, test, is_form, "MUST");
+			test.reportValidity();
+		}
 	}
 	return valid;
 }
