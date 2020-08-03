@@ -42,7 +42,7 @@ if ( !empty($_POST) )
 	</fieldset>
 	<br /><br />
 	<fieldset style="width: 45%;display:inline-block;"><legend>Form with JS validation</legend>
-		<form method="post" onsubmit="return validate(DVS, this)?true:false;" oninput="validate(DVS, this);">
+		<form method="post" onchange="validate(DVS, this);">
 			Username: <input type="text" name="username" /><br />
 			Password: <input type="password" name="new_password" /><br />
 			Confirm: <input type="password" name="cfm_password" /><br />
