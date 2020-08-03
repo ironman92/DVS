@@ -280,7 +280,7 @@ function validate_eval(command, test, is_form=false, report="", invert=false, cu
 									throw "Checkbox not set: " + cmd;
 								break;
 							default:
-								r = test[cmd].value
+								r = test[cmd].value;
 								break;
 						}
 					}
@@ -324,6 +324,5 @@ function validate(rule_string, test, is_form=true, report=true) {
 			test.reportValidity();
 		}
 	}
-	console.log(test["username"].value);
 	return valid;
 }
