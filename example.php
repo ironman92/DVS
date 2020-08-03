@@ -2,6 +2,11 @@
 include_once("DVS.php");
 $DVS = <<<DVS
 	NOT EMPTY username
+	ANY ( == status ) ( 'anonymous' 'identified' )
+	WHEN == status 'anonymous'
+		EMPTY full_name
+	WHEN == status 'identified'
+		MATCH '^.+ .+$' full_name
 	ERROR
 		'Password must be 10+ characters and must contain at least one of each: lowercase, uppercase, number'
 		MATCH '^((?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{10,})$' new_password
@@ -9,7 +14,6 @@ $DVS = <<<DVS
 		'Passwords must match'
 		== new_password cfm_password
 	ALL (SET) (gender enable)
-	MATCH '^.+ .+$' full_name
 DVS;
 
 $valid = "";
@@ -43,6 +47,12 @@ if ( !empty($_POST) )
 	<br /><br />
 	<fieldset style="width: 45%;display:inline-block;"><legend>Form with JS validation</legend>
 		<form method="post" onchange="validate(DVS, this);">
+			Status: <select name="status">
+				<option></option>
+				<option value="anonymous">Anonymous</option>
+				<option value="identified">Identified</option>
+				<option value="invalid">Invalid</option>
+			</select><br />
 			Username: <input type="text" name="username" /><br />
 			Password: <input type="password" name="new_password" /><br />
 			Confirm: <input type="password" name="cfm_password" /><br />
@@ -54,6 +64,12 @@ if ( !empty($_POST) )
 	</fieldset>
 	<fieldset style="width: 45%;display:inline-block;"><legend>Form without JS validation ( test PHP )</legend>
 		<form method="post">
+			Status: <select name="status">
+				<option></option>
+				<option value="anonymous">Anonymous</option>
+				<option value="identified">Identified</option>
+				<option value="invalid">Invalid</option>
+			</select><br />
 			Username: <input type="text" name="username" /><br />
 			Password: <input type="password" name="new_password" /><br />
 			Confirm: <input type="password" name="cfm_password" /><br />

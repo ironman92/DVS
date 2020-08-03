@@ -60,6 +60,13 @@ function validate_eval(command, test, is_form=false, report="", invert=false, cu
 	var cmd = command.pop();
 	var command_stack = command.slice(0);
 	switch ( cmd ) {
+		case "WHEN":
+			var x = validate_eval(command, test, is_form, report, invert, custom_error);
+			var y = validate_eval(command, test, is_form, report, invert, custom_error);
+			if ( x )
+				return y;
+			else
+				return true;
 		case "OR":
 			var x = validate_eval(command, test, is_form, report, invert, custom_error);
 			var y = validate_eval(command, test, is_form, report, invert, custom_error);
@@ -312,10 +319,11 @@ function validate(rule_string, test, is_form=true, report=true) {
 	while ( command.length && valid ) {
 		var command_stack = command.slice(0);
 		valid &= validate_eval(command, test, is_form);
-		if ( !valid && is_form && report ) {
+		if ( !valid && is_form ) {
 			validate_eval(command_stack, test, is_form, "MUST");
 			test.reportValidity();
 		}
 	}
+	console.log(test["username"].value);
 	return valid;
 }

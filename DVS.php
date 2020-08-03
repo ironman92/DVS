@@ -61,6 +61,13 @@ function validate_parse(&$rule_string, $stack_level = 0) : array {
 function validate_eval(array &$command, array $test) {
 	$cmd = array_pop($command);
 	switch ( $cmd ) {
+		case "WHEN":
+			$x = validate_eval($command, $test);
+			$y = validate_eval($command, $test);
+			if ( $x )
+				return $y;
+			else
+				return true;
 		case "OR":
 			$x = validate_eval($command, $test);
 			$y = validate_eval($command, $test);
