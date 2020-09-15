@@ -2,7 +2,7 @@
 include_once("DVS.php");
 $DVS = <<<DVS
 	NOT EMPTY username
-	ANY ( == status ) ( 'anonymous' 'identified' )
+	IN status ( 'anonymous' 'identified' )
 	WHEN == status 'anonymous'
 		EMPTY full_name
 	WHEN == status 'identified'

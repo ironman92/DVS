@@ -68,6 +68,15 @@ function validate_eval(array &$command, array $test) {
 				return $y;
 			else
 				return true;
+		case "IN":
+			$x = validate_eval($command, $test);
+			$fields = array_pop($command);
+			$fields = validate_parse($fields, -1);
+			$valid = false;
+			while ( $fields ) {
+				$valid |= ( $x == validate_eval($fields, $test) );
+			}
+			return $valid;
 		case "OR":
 			$x = validate_eval($command, $test);
 			$y = validate_eval($command, $test);

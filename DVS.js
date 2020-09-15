@@ -67,6 +67,27 @@ function validate_eval(command, test, is_form=false, report="", invert=false, cu
 				return y;
 			else
 				return true;
+		case "IN":
+			var x = validate_eval(command, test, is_form);
+			var fields = command.pop();
+			fields = validate_parse(fields, -1);
+			var valid = false;
+			var y_values = "";
+			while ( fields.length ) {
+				var y = validate_eval(fields, test, is_form);
+				valid |= ( x == y );
+				y_values += y + " ";
+			}
+			if ( invert != !valid && is_form && report ) {
+				var x = validate_eval(command_stack, test, is_form, report + " BE ONE OF: " + y_values, invert, custom_error);
+				var fields = command_stack.pop();
+				fields = validate_parse(fields, -1);
+				var valid = false;
+				while ( fields.length ) {
+					validate_eval(fields, test, is_form);
+				}
+			}
+			return valid;
 		case "OR":
 			var x = validate_eval(command, test, is_form, report, invert, custom_error);
 			var y = validate_eval(command, test, is_form, report, invert, custom_error);
