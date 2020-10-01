@@ -61,7 +61,7 @@ function validate_eval(command, test, is_form=false, report="", invert=false, cu
 	var command_stack = command.slice(0);
 	switch ( cmd ) {
 		case "WHEN":
-			var x = validate_eval(command, test, is_form, report, invert, custom_error);
+			var x = validate_eval(command, test, is_form, "", invert);
 			var y = validate_eval(command, test, is_form, report, invert, custom_error);
 			if ( x )
 				return y;
